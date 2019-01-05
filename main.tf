@@ -20,7 +20,7 @@ data "aws_route53_zone" "zone" {
 
 resource "aws_acm_certificate" "certificate" {
   domain_name               = "${local.common_name}"
-  subject_alternative_names = "${local.subject_alterative_names}"
+  subject_alternative_names = "${local.subject_alternative_names}"
   validation_method         = "DNS"
 }
 
