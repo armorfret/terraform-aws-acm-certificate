@@ -9,4 +9,4 @@ This module provisions an [AWS ACM](https://docs.aws.amazon.com/acm/index.html#l
 
 # License
 
-terraform-linode-algo is released under the MIT License. See the bundled LICENSE file for details.
+terraform-aws-acm-certificate is released under the MIT License. See the bundled LICENSE file for details.
