@@ -2,8 +2,8 @@
 // but the ACM API automatically includes the domain_name in the SAN field of the cert,
 // and *excludes* it in the response to acm.DescribeCertificate, so we split them here.
 locals {
-  common_name               = "${var.domains[0]}"
-  subject_alternative_names = "${slice(var.domains, 1, length(var.domains))}"
+  common_name               = "${var.hostnames[0]}"
+  subject_alternative_names = "${slice(var.hostnames, 1, length(var.hostnames))}"
 }
 
 // For generating the DNS records, we convert hostnames into their zone name.
@@ -13,8 +13,8 @@ locals {
 }
 
 data "aws_route53_zone" "zone" {
-  count        = "${length(var.domains)}"
-  name         = "${replace(var.domains[count.index], "${local.host_to_zone_regex}", "$1")}"
+  count        = "${length(var.hostnames)}"
+  name         = "${replace(var.hostnames[count.index], "${local.host_to_zone_regex}", "$1")}"
   private_zone = false
 }
 
@@ -25,7 +25,7 @@ resource "aws_acm_certificate" "certificate" {
 }
 
 resource "aws_route53_record" "validation" {
-  count   = "${length(var.domains)}"
+  count   = "${length(var.hostnames)}"
   zone_id = "${data.aws_route53_zone.zone.*.id[count.index]}"
 
   name    = "${lookup(aws_acm_certificate.certificate.domain_validation_options[count.index], "resource_record_name")}"
