@@ -12,13 +12,13 @@ locals {
   host_to_zone_regex = "/^(?:.*\\.)?([^.]+\\.[^.]+)$/"
 }
 
-data "aws_route53_zone" "zone" {
+data "aws_route53_zone" "parent" {
   count        = "${length(var.hostnames)}"
   name         = "${replace(var.hostnames[count.index], "${local.host_to_zone_regex}", "$1")}"
   private_zone = false
 }
 
-resource "aws_acm_certificate" "certificate" {
+resource "aws_acm_certificate" "this" {
   domain_name               = "${local.common_name}"
   subject_alternative_names = "${local.subject_alternative_names}"
   validation_method         = "DNS"
@@ -26,15 +26,15 @@ resource "aws_acm_certificate" "certificate" {
 
 resource "aws_route53_record" "validation" {
   count   = "${length(var.hostnames)}"
-  zone_id = "${data.aws_route53_zone.zone.*.id[count.index]}"
+  zone_id = "${data.aws_route53_zone.parent.*.id[count.index]}"
 
-  name    = "${lookup(aws_acm_certificate.certificate.domain_validation_options[count.index], "resource_record_name")}"
-  type    = "${lookup(aws_acm_certificate.certificate.domain_validation_options[count.index], "resource_record_type")}"
-  records = ["${lookup(aws_acm_certificate.certificate.domain_validation_options[count.index], "resource_record_value")}"]
+  name    = "${lookup(aws_acm_certificate.this.domain_validation_options[count.index], "resource_record_name")}"
+  type    = "${lookup(aws_acm_certificate.this.domain_validation_options[count.index], "resource_record_type")}"
+  records = ["${lookup(aws_acm_certificate.this.domain_validation_options[count.index], "resource_record_value")}"]
   ttl     = 60
 }
 
-resource "aws_acm_certificate_validation" "certificate" {
-  certificate_arn         = "${aws_acm_certificate.certificate.arn}"
+resource "aws_acm_certificate_validation" "this" {
+  certificate_arn         = "${aws_acm_certificate.this.arn}"
   validation_record_fqdns = ["${aws_route53_record.validation.*.fqdn}"]
 }
