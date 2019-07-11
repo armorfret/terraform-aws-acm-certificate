@@ -31,7 +31,7 @@ resource "aws_acm_certificate" "this" {
 
 resource "aws_route53_record" "validation" {
   count   = length(var.hostnames)
-  zone_id = zone_mapping[aws_acm_certificate.this.domain_validation_options[count.index]["domain_name"]]
+  zone_id = local.zone_mapping[aws_acm_certificate.this.domain_validation_options[count.index]["domain_name"]]
 
   name    = aws_acm_certificate.this.domain_validation_options[count.index]["resource_record_name"]
   type    = aws_acm_certificate.this.domain_validation_options[count.index]["resource_record_type"]
