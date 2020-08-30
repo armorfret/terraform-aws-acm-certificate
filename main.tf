@@ -40,11 +40,11 @@ resource "aws_acm_certificate" "this" {
 resource "aws_route53_record" "validation" {
   count = length(var.hostnames)
 
-  zone_id = data.aws_route53_zone.parent[locals.validation_list[count.index]["domain_name"]].id
+  zone_id = data.aws_route53_zone.parent[local.validation_list[count.index]["domain_name"]].id
 
-  name    = locals.validation_list[count.index]["resource_record_name"]
-  type    = locals.validation_list[count.index]["resource_record_type"]
-  records = [locals.validation_list[count.index]["resource_record_value"]]
+  name    = local.validation_list[count.index]["resource_record_name"]
+  type    = local.validation_list[count.index]["resource_record_type"]
+  records = [local.validation_list[count.index]["resource_record_value"]]
   ttl     = 60
 }
 
