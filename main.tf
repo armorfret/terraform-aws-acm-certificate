@@ -20,11 +20,6 @@ locals {
   host_to_zone_regex = "/^(?:.*\\.)?([^.]+\\.[^.]+)$/"
 }
 
-// Sort the validation options into a list
-locals {
-  validation_list = sort(aws_acm_certificate.this.domain_validation_options)
-}
-
 data "aws_route53_zone" "parent" {
   for_each     = toset(var.hostnames)
   name         = replace(each.value, local.host_to_zone_regex, "$1")
@@ -38,13 +33,18 @@ resource "aws_acm_certificate" "this" {
 }
 
 resource "aws_route53_record" "validation" {
-  count = length(var.hostnames)
+  for_each = {
+    for dvo in aws_acm_certificate.this.domain_validation_options : dvo.domain_name => {
+      name   = dvo.resource_record_name
+      record = dvo.resource_record_value
+      type   = dvo.resource_record_type
+    }
+  }
+  zone_id = data.aws_route53_zone.parent[each.key].id
 
-  zone_id = data.aws_route53_zone.parent[local.validation_list[count.index]["domain_name"]].id
-
-  name    = local.validation_list[count.index]["resource_record_name"]
-  type    = local.validation_list[count.index]["resource_record_type"]
-  records = [local.validation_list[count.index]["resource_record_value"]]
+  name    = each.value.name
+  records = [each.value.record]
+  type    = each.value.type
   ttl     = 60
 }
 
