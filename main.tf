@@ -20,13 +20,8 @@ locals {
   host_to_zone_regex = "/^(?:.*\\.)?([^.]+\\.[^.]+)$/"
 }
 
-// Convert the zone mapping to a map so that it can be referenced below
-locals {
-  zone_mapping = zipmap(var.hostnames, data.aws_route53_zone.parent[*].id)
-}
-
 data "aws_route53_zone" "parent" {
-  for_each     = var.hostnames
+  for_each     = toset(var.hostnames)
   name         = replace(each.value, local.host_to_zone_regex, "$1")
   private_zone = false
 }
@@ -40,7 +35,7 @@ resource "aws_acm_certificate" "this" {
 resource "aws_route53_record" "validation" {
   for_each = aws_acm_certificate.this.domain_validation_options
 
-  zone_id = local.zone_mapping[each.value["domain_name"]]
+  zone_id = aws_route53_zone.parent[each.value["domain_name"]].id
 
   name    = each.value["resource_record_name"]
   type    = each.value["resource_record_type"]
