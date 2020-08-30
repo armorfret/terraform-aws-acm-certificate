@@ -1,3 +1,11 @@
+terraform {
+  required_providers {
+    aws = {
+      version = "3.4.0"
+    }
+  }
+}
+
 // All hostnames given will be included in the SAN field of the certificate,
 // but the ACM API automatically includes the domain_name in the SAN field of the cert,
 // and *excludes* it in the response to acm.DescribeCertificate, so we split them here.
