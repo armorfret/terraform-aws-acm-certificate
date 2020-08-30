@@ -26,8 +26,8 @@ locals {
 }
 
 data "aws_route53_zone" "parent" {
-  count        = length(var.hostnames)
-  name         = replace(var.hostnames[count.index], local.host_to_zone_regex, "$1")
+  for_each     = var.hostnames
+  name         = replace(each.value, local.host_to_zone_regex, "$1")
   private_zone = false
 }
 
@@ -38,12 +38,13 @@ resource "aws_acm_certificate" "this" {
 }
 
 resource "aws_route53_record" "validation" {
-  count   = length(var.hostnames)
-  zone_id = local.zone_mapping[aws_acm_certificate.this.domain_validation_options[count.index]["domain_name"]]
+  for_each = aws_acm_certificate.this.domain_validation_options
 
-  name    = aws_acm_certificate.this.domain_validation_options[count.index]["resource_record_name"]
-  type    = aws_acm_certificate.this.domain_validation_options[count.index]["resource_record_type"]
-  records = [aws_acm_certificate.this.domain_validation_options[count.index]["resource_record_value"]]
+  zone_id = local.zone_mapping[each.value["domain_name"]]
+
+  name    = each.value["resource_record_name"]
+  type    = each.value["resource_record_type"]
+  records = [each.value["resource_record_value"]]
   ttl     = 60
 }
 
