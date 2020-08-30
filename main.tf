@@ -35,7 +35,7 @@ resource "aws_acm_certificate" "this" {
 resource "aws_route53_record" "validation" {
   for_each = aws_acm_certificate.this.domain_validation_options
 
-  zone_id = aws_route53_zone.parent[each.value["domain_name"]].id
+  zone_id = data.aws_route53_zone.parent[each.value["domain_name"]].id
 
   name    = each.value["resource_record_name"]
   type    = each.value["resource_record_type"]
